@@ -15,10 +15,14 @@ TSF 前端 moqi-im-windows (C++) → JSON/libuv → Go 后端 moqi-ime (server.e
 词库：moqi-ime/rime-frost 子模块（GPL-3.0，上游仓库，不直接改）
 ```
 
-四个 git 仓库，origin=jidzhang（我们的 fork），upstream=原作者。
+四个产品/工具 git 仓库，origin=jidzhang（我们的 fork），upstream=原作者。
 例外（2026-10-20）：libIME2 原来 origin 直指 gaboolic（无写权限），已 fork 出
 jidzhang/libIME2 作 origin，原地址保留为 upstream（用于跟上游同步）。
 许可证归属见各仓库 NOTICE.md。
+
+**根目录本身是一个私有文档仓**（`jidzhang/MoqiIME-docs`）：交接文档 `0X-*.md` +
+`AGENTS.md` + `bug-list.txt` 等。四个子仓库与 `eval-workspace/`（约 17GB 素材）都在
+`.gitignore` 里排除。**改完交接文档/本文件要提交推送**，否则只存在本地。
 
 ## 目标
 
@@ -102,6 +106,9 @@ git -C moqi-ime status --short
 git -C moqi-im-windows         -c http.proxy=http://127.0.0.1:7890 push origin main
 git -C moqi-im-windows/libIME2 -c http.proxy=http://127.0.0.1:7890 push origin master
 git -C moqi-ime                -c http.proxy=http://127.0.0.1:7890 push origin main
+git -C librime-gaboolic        -c http.proxy=http://127.0.0.1:7890 push origin master
+# 交接文档仓（就在项目根目录）：
+git -c http.proxy=http://127.0.0.1:7890 push origin main
 ```
 
 - 三个仓库的跟踪分支都是 `origin/*`（自己的 fork），所以裸 `git push` 也安全；
