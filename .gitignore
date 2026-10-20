@@ -1,0 +1,13 @@
+# 四个产品/工具仓库各自独立管理，不纳入本文档仓
+/librime-gaboolic/
+/moqi-im-windows/
+/moqi-ime/
+/rime-schema-compare/
+
+# 素材与运行时目录（GB 级：测评产物、用户目录、日志）
+/eval-workspace/
+/users/
+/Logs/
+
+# 构建日志（临时产物，不入库）
+*.log
