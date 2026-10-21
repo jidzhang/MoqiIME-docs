@@ -56,6 +56,14 @@ jidzhang/libIME2 作 origin，原地址保留为 upstream（用于跟上游同�
    会游离于 master 之外（外层只记 SHA，从 `git status` 看不出）。改之前跑
    `git branch --show-current`，输出为空就先 `checkout master`；发现游离提交用
    `merge --ff-only` 接回分支，不要 `reset`。
+11. **输入延迟先分环境还是代码**：先看生产慢日志（`RIME slow`，阈值 30ms）和同时段
+    系统资源，再决定是否动引擎。判据：① 修饰键（Ctrl/Shift/Alt/Backspace）也慢
+    → 调度/缺页/锁等待，不是算法；② 慢键与客户端 init/close 聚集 → 客户端 churn；
+    ③ 慢键与 CPU/内存低谷重合 → 资源争抢。本机只有 4 vCPU/8GB，ZCode 这类 Electron
+    程序一开就是 45 进程/7GB，先排查它，别急着改 librime。
+12. **界面细节优先简单可维护**：能用普通 GDI 一次画完的，不引入分层窗口/自绘引擎/
+    额外依赖；用户对观感的要求是"干净、不刺眼"，不是像素级特效。候选窗口四角统一
+    按直角处理（2026-10-21 定案）。
 
 ## 路线（按优先级）
 
@@ -70,7 +78,14 @@ jidzhang/libIME2 作 origin，原地址保留为 upstream（用于跟上游同�
    A/B 工具 `eval-workspace/probe-typo.exe` 已就绪。
 3. **体验**：~~首切延迟~~（2026-10-20 已解决：librime 消除 melt_eng/radical_pinyin
    schema 循环依赖 + 启动器启动即预热后端；用户实测"几乎没有卡的感觉"）。
-   剩余：Go 管线 filterKeyDown 27.6ms/键。
+   ~~`filterKeyDown 27.6ms/键` 口径~~ → 2026-10-21 定案：旧探针提交空格时没走
+   `filterKeyDown`，旧数全部作废；实测后端 **0.40ms/键**，主因是 DLL 每 RPC 的
+   2ms 轮询（每键 4 次 RPC ≈ **11.4ms**）。DLL 已改 overlapped 事件读
+   （≈ **0.73ms/键**），**2026-10-21 09:41 实机装包验证通过并已提交**；证据见
+   `05-交接-2026-10-20.md` 第八节、`moqi-ime/report/2026-10-16-baseline.md` 十二~十五节。
+   候选体验（2026-10-21）：默认总候选 **7**、每行 **9** 不变（`defaultStyle().CandidateCount`、
+   `candidateCount()` 兜底）；候选窗口四角改 **直角**（去掉 `CreateRoundRectRgn`/`FrameRgn`，
+   整块 `FillRect` + `FrameRect`），**不做分层窗口抗锯齿圆角**——用户明确"简单好维护就行"。
 4. **杂项**：音形模式误入 bug；moqi-ime 存量失败测试（基线即挂，非阻塞）。
 
 ## 日常操作速查
