@@ -86,7 +86,16 @@ jidzhang/libIME2 作 origin，原地址保留为 upstream（用于跟上游同�
    候选体验（2026-10-21）：默认总候选 **7**、每行 **9** 不变（`defaultStyle().CandidateCount`、
    `candidateCount()` 兜底）；候选窗口四角改 **直角**（去掉 `CreateRoundRectRgn`/`FrameRgn`，
    整块 `FillRect` + `FrameRect`），**不做分层窗口抗锯齿圆角**——用户明确"简单好维护就行"。
+   首候选高亮四边贴边（2026-10-21 定案）：行首贴左边、右侧停在 1/2 候选间距中点、
+   首行/末行贴上下边、单列也贴；候选默认 7、每行 9。
+   **数字/小数点直通**（2026-10-21）：无组字时数字键直接上屏，紧跟数字的 `.` 上半角点
+   （对齐微软拼音，用户实报"按了 4. 光标停在 . 上面"）；组字中数字仍选候选；
+   T9 数字九宫格除外（数字是输入）。实现见
+   `moqi-ime/input_methods/rime/patches/moqi_plain_number.lua`（打包期补丁，
+   不直接改 rime-frost 子模块）。
 4. **杂项**：音形模式误入 bug；moqi-ime 存量失败测试（基线即挂，非阻塞）。
+   语法模型（gram）：内置 7MB 小 gram 实测无提效，**已从安装包移除**；
+   只保留 essay-bgw（196.8MB）——full 包内置 + 独立下载；20MB 档尚无合格候选。
 
 ## 日常操作速查
 
