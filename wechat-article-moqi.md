@@ -28,7 +28,7 @@
 
 ## 还有两个进阶玩法
 
-- **AI 联想**：按下 `Ctrl+Shift+G` 写好评、`Ctrl+Shift+O` 优化整句、`Ctrl+Shift+E` 中译英、`Ctrl+Shift+Q` 问答——把大模型接进输入法，候选里直接出结果。支持任意 OpenAI 兼容接口，填入你自己的 API key 即可启用（也可指向私有部署）；不填就完全不联网。
+- **AI 联想**：按下 `Ctrl+Shift+G` 写好评、`Ctrl+Shift+R` 润色、`Ctrl+Shift+O` 优化整句、`Ctrl+Shift+E` 中译英、`Ctrl+Shift+Q` 问答——把大模型接进输入法，候选里直接出结果。支持任意 OpenAI 兼容接口，填入你自己的 API key 即可启用（也可指向私有部署）；不填就完全不联网。
 - **云剪贴板 + 词库同步**：用你自己的 WebDAV（坚果云、Nextcloud 等）在多台电脑之间同步剪贴板内容和用户词库，数据走你自己的存储，不经过任何第三方服务器。
 
 ## 下载
