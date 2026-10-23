@@ -96,6 +96,23 @@ jidzhang/libIME2 作 origin，原地址保留为 upstream（用于跟上游同�
 4. **杂项**：音形模式误入 bug；moqi-ime 存量失败测试（基线即挂，非阻塞）。
    语法模型（gram）：内置 7MB 小 gram 实测无提效，**已从安装包移除**；
    只保留 essay-bgw（196.8MB）——full 包内置 + 独立下载；20MB 档尚无合格候选。
+   **gram 放置与验证规则（2026-10-23 用户定死，别再反复）**：
+   - gram 文件放**安装目录**（`{app}\moqi-ime\input_methods\rime\data\`）或用户目录
+     （`%APPDATA%\Moqi\Rime\`）都行，`grammar_model=auto`（默认）自动选两者中
+     ≥64MB 的最大 `.gram`。**放安装目录就能启用，这条路是好的**（10-23 三次装包
+     glog 铁证 `use grammar: zh-hans-t-essay-bgw`）。
+   - 验证 gram 是否加载的唯一口径：`MoqiIM/Log/Rime.Moqi.*.INFO.*.log` 里
+     `use grammar: <名字>`；候选上的 `*` 标记只是 debug 参考。
+   - **覆盖安装会清空 `{app}\moqi-ime`，放安装目录的 gram 会丢——装新包后
+     要重装 full 包或把 gram 拷回**；用户目录的 gram 不受影响。
+   - **abbrev_sentences 已移除（2026-10-23 方案 A，用户拍板）**：混合输入组句
+     把真人混合首选率打到 29.7%（去掉 64.8%，gram 本体保留只差 0.9）；
+     代价 d3 65.9→59.4。full=gram 开+组句关；标准/lite 无 gram 不变。
+     如需为长句人群恢复须改 `local_behavior.go`（无配置开关）。
+   - 实验工具里控制 gram 开关必须走 `local_behavior.json`
+     （`{"grammar_model":"off"}`，放 APPDATA 重定向后的 `Moqi\` 目录），
+     **不要手写 `rime_frost.custom.yaml`**——没有 managed 标记的该文件会被
+     产品正确地拒绝覆盖，开关被架空、实验两组跑成一样的（10-23 踩坑）。
 5. **五笔拼音混输（待办，暂缓；用户 2026-10-23 明确"现在先不做"）**：
    现状 = 方案切换（托盘「输入方案」）+ 五笔方案内 `z` 临时拼音，
    不是同组字混输；拼音方案不认五笔码。开工需新增混输 schema
