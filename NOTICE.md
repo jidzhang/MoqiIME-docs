@@ -19,8 +19,14 @@
 ## 数据与模型
 
 - `data/cn_dicts/*` 来自白霜拼音词库，遵循 **GPL-3.0**。
-- 语言模型 `.gram` 文件（如 `zh-hans-t-essay-bgw.gram`、`wanxiang-lts-zh-hans.gram`）
-  来自各自上游发布，遵循其原始许可，**不作为本项目自有资产**。
+- 语言模型 `zh-hans-t-essay-bgw.gram` 来自
+  [lotem/rime-octagram-data](https://github.com/lotem/rime-octagram-data)，
+  许可为 **LGPL-3.0**（2026-10-25 核实：仓库 LICENSE 与 GitHub 许可字段一致）。
+  LGPL 对合并发行的核心要求（用户可替换 LGPL 组件）由产品天然满足：
+  安装器 auto 扫描 .gram、用户可随意替换/增删模型文件。原样分发时保留
+  本条归属与许可证声明即合规。**不作为本项目自有资产**。
+- 其他 `.gram` 文件（如 `wanxiang-lts-zh-hans.gram`）为用户自装，不随本
+  项目分发，遵循各自上游的原始许可。
 
 ## 本项目的修改
 
