@@ -1,8 +1,8 @@
 # AGENTS.md — MoqiIME 项目总纲
 
-> 面向在本目录工作的 AI agent。**权威入口：`03-交接-2026-10-18.md`**（目标/成绩/技术手段/
-> 路线图/环境坑/素材表的完整版）+ **当日交接 `05-交接-2026-10-20.md`**（按日期递增，
-> 最新结论以它为准）；每个实验或修复完成后必须回写当日交接，
+> 面向在本目录工作的 AI agent。**最新交接：`17-交接-2026-10-26.md`**；
+> 交接文档按日期递增（03-交接-2026-10-18.md 有目标/技术手段/环境坑的完整版），
+> 最新结论以日期最大的为准；每个实验或修复完成后必须回写当日交接，
 > 实验明细追加到 `moqi-ime/report/2026-10-16-baseline.md`。本文只定原则、目标和路线。
 
 ## 项目是什么
@@ -28,7 +28,8 @@ jidzhang/libIME2 作 origin，原地址保留为 upstream（用于跟上游同�
 
 **真实打字场景 top-1 准确率达到 70%。**
 "真实打字场景" = d3 混合连打（前词全拼 + 后词首字母，一次空格上屏）。
-当前 54.55（2026-10-18，prod 栈）。汉语拼音逻辑上可能到不了 70%，
+当前 67.90（2026-10-26，prod 栈 ime，白盒读音口径修复+组句配置纠偏后；历史基线
+见 `eval-workspace/baseline-v1.6.0.txt`）。汉语拼音逻辑上可能到不了 70%，
 **穷尽手段后可停**，不硬凑数字。
 
 ## 总体原则（硬约束，违反即返工）
@@ -91,11 +92,12 @@ jidzhang/libIME2 作 origin，原地址保留为 upstream（用于跟上游同�
    - 词库：补高频口语 bigram（gold 词对 24.2% 在词典中完全缺失：是的/的是/的人…，
      权重公式 min(2.2×语料频次, 30000) 已验证），走 prebuild 打包期合入。
    - gram：essay-bgw 已就位，可试自训域适配 gram（subs/news 语料）。
-   - 算法：句子候选 quality 公式定档（sentence_quality_boost 扫参，门已留好）。
+   - 算法：句子候选 quality 公式定档（sentence_quality_boost 扫参，门已留好；
+     10-26 实证罚分 -4/-12 在 d5 上无差异，d3 边际效应待干净口径复扫）。
 2. **容错层（正式待办，用户 2026-10-18 确认）**：换位类错字 top-1 仅 23%
-   （无错字 89.8%）。修法=音节图换位边+门控；全局开现有纠错器实测 d5 −6.2，
-   禁止整体打开。验收标准与实现细节见 03-交接文档路线图第 2 项，
-   A/B 工具 `eval-workspace/probe-typo.exe` 已就绪。
+   （无错字 89.8%）。换位纠错边已实现并进产品（librime
+   `translator/enable_transpose`，credibility −8 收编 T 23.4→51.6，prod yaml 已开）；
+   漏字边与门控方案实测否决，不再跟进。A/B 工具 `eval-workspace/probe-typo.exe`。
 3. **体验**：~~首切延迟~~（2026-10-20 已解决：librime 消除 melt_eng/radical_pinyin
    schema 循环依赖 + 启动器启动即预热后端；用户实测"几乎没有卡的感觉"）。
    ~~`filterKeyDown 27.6ms/键` 口径~~ → 2026-10-21 定案：旧探针提交空格时没走
@@ -155,7 +157,16 @@ cd /z/dev/IME/MoqiIME/eval-workspace && ./suite-v2.sh     # 发版档全矩阵
 ./probe-typo.exe 2000 2000    # 容错维度
 ```
 
-- 测评每格**必须全新用户目录**（用户词典跨格污染会假提升）。
+- 测评每格**必须全新用户目录**（用户词典跨格污染会假提升）；后台跑格的
+  停止必须杀**进程树**（bash 循环 + exe），TaskStop 外层壳杀不死内层循环，
+  且 rime.dll 非并发安全——并发跑格会互相污染出假数据（10-26 实证）。
+- **白盒考卷读音口径（2026-10-26 定稿）**：eval 转音 = phrase-pinyin-data 词表
+  正向最长匹配 + 单字回退 + 6 条纠错词典（`eval/sentences_windows.go`，
+  与黑盒 pypinyin 口径 100% 对齐）。--pinyin 同目录有 phrase-pinyin-data.txt
+  即自动加载，跑格脚本无需传参。
+- **产品配置变更必须同步白盒 prod yaml**（10-26 事故）：abbrev_sentences 产品
+  10-23 已移除但 suite 脚本残留"开"，dll 换代后该键首次生效，d3 假摔 8 点。
+  基线快照 `eval-workspace/baseline-v1.6.0.txt` 为下次发版门 diff 锚。
 - 改 librime 后：`librime-gaboolic/rebuild-librime2.bat` 重编 rime.dll，
   拷到 `moqi-ime/input_methods/rime/rime.dll` 与 `eval-workspace/rime.dll`。
 - MSVC 编译必须走 .bat（Git Bash 误解析参数）；GitHub 走代理 127.0.0.1:7890。
