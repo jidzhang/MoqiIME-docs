@@ -11,7 +11,7 @@
 
 ```
 TSF 前端 moqi-im-windows (C++) → JSON/libuv → Go 后端 moqi-ime (server.exe)
-→ cgo → librime-gaboolic (rime.dll) + plugins/librime-octagram (n-gram)
+→ cgo → librime (rime.dll) + plugins/librime-octagram (n-gram)
 词库：moqi-ime/rime-frost 子模块（GPL-3.0，上游仓库，不直接改）
 ```
 
@@ -167,7 +167,7 @@ cd /z/dev/IME/MoqiIME/eval-workspace && ./suite-v2.sh     # 发版档全矩阵
 - **产品配置变更必须同步白盒 prod yaml**（10-26 事故）：abbrev_sentences 产品
   10-23 已移除但 suite 脚本残留"开"，dll 换代后该键首次生效，d3 假摔 8 点。
   基线快照 `eval-workspace/baseline-v1.6.0.txt` 为下次发版门 diff 锚。
-- 改 librime 后：`librime-gaboolic/rebuild-librime2.bat` 重编 rime.dll，
+- 改 librime 后：`librime/rebuild-librime2.bat` 重编 rime.dll，
   拷到 `moqi-ime/input_methods/rime/rime.dll` 与 `eval-workspace/rime.dll`。
 - MSVC 编译必须走 .bat（Git Bash 误解析参数）；GitHub 走代理 127.0.0.1:7890。
 - **测试临时产物（探针 exe/提权脚本/中转文件）放 `D:\` 本地盘，不放 Z:\**
@@ -187,7 +187,7 @@ git -C moqi-ime status --short
 git -C moqi-im-windows         -c http.proxy=http://127.0.0.1:7890 push origin main
 git -C moqi-im-windows/libIME2 -c http.proxy=http://127.0.0.1:7890 push origin master
 git -C moqi-ime                -c http.proxy=http://127.0.0.1:7890 push origin main
-git -C librime-gaboolic        -c http.proxy=http://127.0.0.1:7890 push origin master
+git -C librime        -c http.proxy=http://127.0.0.1:7890 push origin master
 # 交接文档仓（就在项目根目录）：
 git -c http.proxy=http://127.0.0.1:7890 push origin main
 ```

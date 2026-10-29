@@ -69,7 +69,7 @@
 ```
 moqi-ime            origin: github.com/jidzhang/moqi-ime          upstream: github.com/gaboolic/moqi-ime
 moqi-im-windows     origin: github.com/jidzhang/moqi-im-windows   upstream: github.com/gaboolic/moqi-im-windows
-librime-gaboolic    origin: github.com/jidzhang/librime           upstream: github.com/gaboolic/librime
+librime    origin: github.com/jidzhang/librime           upstream: github.com/gaboolic/librime
 librime-octagram    origin: github.com/jidzhang/librime-octagram  upstream: github.com/lotem/librime-octagram
 ```
 
