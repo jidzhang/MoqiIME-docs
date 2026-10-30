@@ -7,11 +7,13 @@
 | 安装包 | 大小 | 适合谁 |
 |---|---|---|
 | **moqi-im-windows-setup-1.7.0.exe** | 85MB | **大多数用户装这个**。开箱即用，自带基础增强数据 |
-| moqi-im-windows-setup-essay-1.7.0.exe | 240MB | 长句/整句输入多的用户（写作、聊天长文）。体积大、整句更聪明 |
 | moqi-im-windows-setup-wiki-1.7.0.exe | 102MB | 长句增强与体积的折中档（比标准档强，比 essay 轻便） |
 | moqi-im-windows-setup-lite-1.7.0.exe | 38MB | 追求极简、磁盘紧张的用户。无增强数据，功能完整 |
+| moqi-im-windows-setup-essay-1.7.0.exe | 240MB | 长句/整句输入多的用户（写作、聊天长文）。体积大、整句更聪明 |
+| moqi-im-windows-setup-wanxiang-1.7.0.exe | 401MB | 想体验万象风格增强数据的用户 |
+| zh-moqi-dummy.gram | 1KB | lite 档内置的同款数据，供重装或手动修复用 |
+| zh-moqi.gram | 9MB | 标准档内置的同款数据，供重装或手动修复用 |
 | zh-hans-t-essay-bgw.gram | 197MB | 已装标准档/lite 想后补整句增强的用户：下载后放进安装目录的 `moqi-ime\input_methods\rime\data\` 即可 |
-| zh-moqi.gram / zh-moqi-dummy.gram | 9MB / 1KB | 标准档/lite 内置的同款数据，供重装或手动修复用 |
 
 **一句话建议**：不确定就装第一个（85MB 标准档）；常打长句选 essay。已装旧版直接覆盖安装即可，输入数据不会丢。
 
@@ -27,4 +29,4 @@
 
 - 纯简拼（如 srf）的候选顺序按词频排列，属正常现象。
 - AI 功能默认关闭，需自行配置方可开启。
-- essay/wanxiang 档的整句增强模型来自 [amzxyz/rime-wanxiang-data](https://github.com/amzxyz/rime-wanxiang-data)（万象模型，仅模型；词库为墨奇自有词库），感谢作者。
+- 整句增强数据来源：essay 档来自 [lotem/rime-octagram-data](https://github.com/lotem/rime-octagram-data)（rime 官方八股文数据）；wanxiang 档模型来自 [amzxyz/rime-wanxiang-data](https://github.com/amzxyz/rime-wanxiang-data)（仅模型；词库为墨奇自有词库）。感谢作者。
