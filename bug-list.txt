@@ -20,3 +20,11 @@
 16. 2026-10-28 新立：Windows Terminal / wezterm / Windows 便签里打字时"正在打的拼音被反色选中"。同一台机器上记事本、ZCode、浏览器正常。【2026-10-28 修复，WT/便签/wezterm 全部用户实测通过】两个独立根因：①WT/便签（墨奇侧，已修代码）：墨奇登记的组字显示属性带 TF_CT_*SYSCOLOR 实色（COLOR_WINDOWTEXT 黑字 + COLOR_WINDOW 白底），WT 的 _textAttributeFromAtom 在 crText.type==crBk.type 且非 NONE 时同时上前景+背景、PreviewText 还把预览铺满整行——深色终端里就是白底黑字反色带；便签等 XAML 宿主同理。修复=libIME2 ImeModule.cpp 三个颜色全改 TF_CT_NONE（对齐 Weasel "change style only, leave color to app"），仅保留 TF_LS_DOT 点线下划线，组字颜色交宿主主题。②wezterm（宿主侧，与墨奇无关）：纯 IMM32 宿主完全忽略 TSF 显示属性，Builtin 预编辑渲染把光标块铺满组字区、颜色回落光标色（任何 TSF 输入法一致）；解法=wezterm ≥2026-10-26 构建的 colors.compose_fg/compose_bg（用户已升级，~/.wezterm.lua 配 Dracula 前景 #f8f8f2/背景 #282a36，实测通过）。排障教训两条：(a) TSF DLL 实际加载路径以注册表 InprocServer32 为准（本机=C:\WINDOWS\System32 与 SysWOW64，非安装目录），调试部署必须先查注册表；(b) 替换被进程占用的 DLL 用重命名法（rename 后 copy，旧进程内存留旧版、新进程加载新版）。详见 19-交接。
 
 17. 2026-10-30 用户报（观感）：打 srf 时第一个候选是「杀人犯」，觉得不合理——双人房/首日封/受让方都是不错的候选。核实【不是缺陷，是词频排序；已评估，决定不改】：①纯简拼 srf 无任何全拼顶点，二遍纠错不触发，与纠错功能无关；②候选顺序完全由词典权重决定，实测 杀人犯 1108 > 输入法 1011 ≫ 受让方 95 > 双人房 25 > 首日封 15 —— 杀人犯在该简拼串下确实是词典里最高频的三字词（新闻/案件语料偏置）；③同批次其它输入正常：sr→是人/虽然/收入、sfa→算法/说法/手法、srfang→受让方。属 AGENTS「简拼不死磕」的固有歧义面（无上下文时只能靠词频硬排）。用户 2026-10-30 拍板不改。若日后要处理，方向是「敏感词降权层」（lua filter，仅纯简拼输入生效，几十词表，需跑 jp2/d6 守卫），禁止按词打补丁。详见 20-交接 §十四。
+
+18. 2026-10-30 用户再报（bug#13 的残留）：首键偶尔仍打不出字，"这些输入法我从来没遇到过"，要求彻查必须解决。核实【成立，共 4 个吞键点 + 1 个预算缺口，全部修复，待实机验证】：
+    ① Client::filterKeyDown 忙等超时吃键——激活窗口预算 1.5s 盖不住冷启动（启动器拉起+后端 init/部署实测 5~14s：开机首切/退出引擎后首键/重启引擎后片刻都会走到）；常规激活实测 ~110ms 所以 1.5s 平时够用，冷启动必超→键被吃。
+    ② Client::filterKeyDown RPC 硬失败吃键（管道断/连接耗尽 3s 预算/应答坏）——冷启动主犯：onActivate 用 ~1s 小预算先放弃，首键的建连预算只有 ~3s，部署没完成就失败→吃键。
+    ③ TextService::filterKeyDown client 未就绪吃键（ensureClientForCurrentProfile 失败）。
+    ④ Client::onKeyDown RPC 失败时键已被 filter 消费→返回 false 实际丢字（无法直通补救）。
+    另【证据链缺口】：吃键日志被"trace 档才输出"门控，默认 error 档下问题复现零留痕（rpc-guard 日志文件从未生成过）——此前无从定位。
+    修复（2026-10-30 晚，未提交等验证）：A. 按键异常日志无条件常开，独立文件 tsf-key-guard.log（KeyGuardLog.h 共享声明，原先写 tsf-debug.log 且被 trace 门控）；B. 激活窗口首键等待 1500ms→10000ms（预热让长等待极少发生，发生时宁顿不丢）；C. ①②③全部从"吃键"改为"放行直通"（字母以英文上屏：可见可删，好过凭空消失；平台在 IME 无响应时的回退行为同样是直通英文）；D. ④无条件留痕（key lost）。x64/Win32 零错误零警告。验收：杀 MoqiLaunch+MoqiIME 后立刻打字→应顿一下后正常出组字（不再丢）；正常输入无回退；tsf-key-guard.log 平时无新增（有新增=每次异常都有记录）。
