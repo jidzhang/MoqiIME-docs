@@ -27,4 +27,4 @@
     ③ TextService::filterKeyDown client 未就绪吃键（ensureClientForCurrentProfile 失败）。
     ④ Client::onKeyDown RPC 失败时键已被 filter 消费→返回 false 实际丢字（无法直通补救）。
     另【证据链缺口】：吃键日志被"trace 档才输出"门控，默认 error 档下问题复现零留痕（rpc-guard 日志文件从未生成过）——此前无从定位。
-    修复（2026-10-30 晚，未提交等验证）：A. 按键异常日志无条件常开，独立文件 tsf-key-guard.log（KeyGuardLog.h 共享声明，原先写 tsf-debug.log 且被 trace 门控）；B. 激活窗口首键等待 1500ms→10000ms（预热让长等待极少发生，发生时宁顿不丢）；C. ①②③全部从"吃键"改为"放行直通"（字母以英文上屏：可见可删，好过凭空消失；平台在 IME 无响应时的回退行为同样是直通英文）；D. ④无条件留痕（key lost）。x64/Win32 零错误零警告。验收：杀 MoqiLaunch+MoqiIME 后立刻打字→应顿一下后正常出组字（不再丢）；正常输入无回退；tsf-key-guard.log 平时无新增（有新增=每次异常都有记录）。
+    修复（2026-10-30 晚；已提交 moqi-im-windows af43038 + 04c3ed0/v1.8.1，实机自动化 16 轮输入法切换+多宿主首键零丢失、tsf-key-guard.log 全程零异常；用户 1.8.1 五档包终验中）：A. 按键异常日志无条件常开，独立文件 tsf-key-guard.log（KeyGuardLog.h 共享声明，原先写 tsf-debug.log 且被 trace 门控）；B. 激活窗口首键等待 1500ms→10000ms（预热让长等待极少发生，发生时宁顿不丢）；C. ①②③全部从"吃键"改为"放行直通"（字母以英文上屏：可见可删，好过凭空消失；平台在 IME 无响应时的回退行为同样是直通英文）；D. ④无条件留痕（key lost）。x64/Win32 零错误零警告。验收：杀 MoqiLaunch+MoqiIME 后立刻打字→应顿一下后正常出组字（不再丢）；正常输入无回退；tsf-key-guard.log 平时无新增（有新增=每次异常都有记录）。
