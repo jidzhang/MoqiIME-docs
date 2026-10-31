@@ -34,14 +34,14 @@
   LGPL 对合并发行的核心要求（用户可替换 LGPL 组件）由产品天然满足：
   安装器 auto 扫描 .gram、用户可随意替换/增删模型文件。原样分发时保留
   本条归属与许可证声明即合规。**不作为本项目自有资产**。
-- **`zh-moqi.gram`（9MB，标准包内置）与 `zh-moqi-wiki.gram`（30.6MB，wiki
-  包内置；档名与基底解耦，用户 2026-10-29 拍板保持原名）**：以上方 LGPL-3.0
-  的 `zh-hans-t-essay-bgw.gram` 为基底制作的衍生模型（2026-10-29）。
+- **`zh-moqi.gram`（9MB，标准包内置）、`zh-moqi-wiki.gram`（30.6MB，wiki
+  包内置；档名与基底解耦，用户 2026-10-29 拍板保持原名）与
+  `zh-moqi-lite.gram`（1.1MB，lite 包内置，2026-10-31 换下 1KB 空占位
+  dummy）**：以上方 LGPL-3.0 的 `zh-hans-t-essay-bgw.gram` 为基底制作的
+  衍生模型（lite 为 top-10 万高频词对裁剪）。
   属 LGPL 成品的衍生作品，许可与署名随 essay 条目
   （lotem/rime-octagram-data，LGPL-3.0），用户可替换性由 .gram 文件可自由
   增删满足。
-- **`zh-moqi-dummy.gram`（1KB，lite 包内置）**：空 trie 占位文件（零语料内容），
-  仅触发引擎组句路径，无许可负担。
 - 其他 `.gram` 文件（如 `wanxiang-lts-zh-hans.gram`）为用户自装，不随本
   项目分发，遵循各自上游的原始许可。
 - 自训语法模型历史版本（zh-moqi-wiki 64.5MB 纯维基自训版，2026-10-27 定版、
