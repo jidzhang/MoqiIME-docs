@@ -1,6 +1,6 @@
 # AGENTS.md — MoqiIME 项目总纲
 
-> 面向在本目录工作的 AI agent。**最新交接：`30-方案-完全离线对标微软拼音-2026-11-02.md`（**长期路线图**：科研地图（NNLM→n-gram 蒸馏/RWKV 端内/Gboard 离线联想/KSPC 尺子）+微软解剖+代码盘点（**history_translator 闲置、ContextualTranslation 窄窗**）+差距矩阵+三阶段路线（0 尺子对齐→1 算法补课：前缀稳定/上下文深化/userdb 科学化/模糊音/词库审计→2 AI 固化：联想/神经蒸馏回 n-gram/RWKV PoC）+验收=黑盒超微软、KSPC 降、翻转<1%；方向定案链=29-交接（词库=解读排序非生成/接上文=算法策略/微软四件套）+21 §八（AI=离线固化））；并行架构线=`28-交接-2026-11-02.md`（5b 菜单移植黄金锁定（71b61c7+701adff）；5c `--serve`+MoqiLaunch 退休；**AI 64 位收官**；推送假死=管道串行化四处 overlapped 修复；五包构建）；上一=`27-交接-2026-11-02.md`（语言栏三根因+契约测试；5a Daemon 当家）；云剪贴板/WebDAV 用户定 11-03/11-04（优先于路线图阶段 1+）。主线回归入口=准确性/纠正/基于上屏字的候选调整（用户 11-02 定向）；长句续研=`25-报告-长句前缀稳定性-2026-11-01.md`**；
+> 面向在本目录工作的 AI agent。**最新：`34-交接-2026-11-04.md`（**微软黑盒锚点+四件套解剖**：整句 exact MS 56.67% vs 墨奇 53.33%（差 3.3 在 n=120 误差带边缘）、字符正确率墨奇反超 89.97 vs 85.17、前缀逐位墨奇碾压 39.1 vs 10.9；**解剖参数表 v0=动态词频 1~2 次选中翻序写 IH.dat、自造词=修正驱动非频率（UDL）、错句零学习防污染、跨提交调频无/极弱**；G1-G4 工作目标待用户拍板；测量产物 anchor-20261104 + F:\work\IME\ms-anatomy\）；上一=`33-审查-Go替换对照-2026-11-04.md`（**通读代码对照 Go 找缺陷 + 场景回归**：修 8 个 P0（`\a` 路径、AI 配置崩锁、5000 段冷启动、`RimeChangePage` 缺失导致翻页丢字、引擎失败不可重试、覆盖装退出码 5、reboot 漏删旧计划任务、`RimeSyncUserData` 空指针）与一批 P1（同步词库空壳、local_behavior 补丁缺失、主题/注释色、成对符号文件、云剪贴板提示/热键/丢上传/转发闩锁、分号次选、候选数、共享捕获、图标目录、AI 覆盖层/Esc/previousCommit/出站总闸）；自动化 audit 24/24 + webdav 6/6；五包 2.0.0 重打；剩余缺口=置顶短语/超级简拼 overlay、云列表线程生命周期、真实覆盖装验证）；`31-交接-2026-11-03.md`（Go 退休收尾 + 2.0.0）；`30-方案-完全离线对标微软拼音-2026-11-02.md`（长期路线图）与 `28-交接-2026-11-02.md`（5b/5c 架构）；`29-交接-2026-11-02.md`（方向定案）；`27-交接-2026-11-02.md`（语言栏三根因+契约测试；5a Daemon 当家）。主线回归入口=准确性/纠正/基于上屏字的候选调整（用户 11-02 定向）；长句续研=`25-报告-长句前缀稳定性-2026-11-01.md`**；
 > 交接文档按日期递增（03-交接-2026-10-18.md 有目标/技术手段/环境坑的完整版），
 > 最新结论以日期最大的为准；每个实验或修复完成后必须回写当日交接，
 > 实验明细追加到 `moqi-ime/report/2026-10-16-baseline.md`。本文只定原则、目标和路线。
@@ -10,10 +10,14 @@
 墨奇输入法（Windows TSF 中文拼音输入法），fork 自 gaboolic 的开源实现：
 
 ```
-TSF 前端 moqi-im-windows (C++) → JSON/libuv → Go 后端 moqi-ime (server.exe)
-→ cgo → librime (rime.dll) + plugins/librime-octagram (n-gram)
-词库：moqi-ime/rime-frost 子模块（GPL-3.0，上游仓库，不直接改）
+TSF 前端 moqi-im-windows (C++) ──x64──> 进程内引擎 librime (rime.dll)
+                                └─x86──> MoqiDaemon.exe --serve（管道 RPC，C++）
+                                         └→ rime.dll + plugins/librime-octagram
+数据：moqi-ime/input_methods/rime（rime-frost 子模块，GPL-3.0，不直接改）
 ```
+
+（2026-11-03 起 Go 后端 MoqiIME.exe 已退休：运行链与安装包都不再带它；
+`moqi-ime` 仓库只剩词库/数据构建工具（rime-prebuild）与历史代码。）
 
 四个产品/工具 git 仓库，origin=jidzhang（我们的 fork），upstream=原作者。
 例外（2026-10-20）：libIME2 原来 origin 直指 gaboolic（无写权限），已 fork 出
