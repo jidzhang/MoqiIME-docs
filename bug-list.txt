@@ -32,3 +32,72 @@
 19. 2026-10-31 用户报（内存审计压测窗口实况观察）：切换瞬间大量出现裸拼音 "nihao" 而非组字后选字"你好"——"这个问题一会儿单独立项去调查"。【10-31 上午调查结论】(a) 拟好/你好交替=探针假象：探针固定选第 2 候选+用户词典把被选词推上第 1 → 下轮第 2 名换人，新词典 151:150 完美交替实证，非产品 bug。(b) 裸拼音：08:27 脏跑真实发生（框内 563 字含 nihaoni，a11y 铁证），但当前构建三轮忠实复刻（301/220/1501 周期，含不清屏+Ctrl+A 失效堆积+原版键序满时长）全部零复现——trace 证明每键都到墨奇、每键都被组字处理（filter=onKeyDown 逐键对齐，零拒收零绕过），守卫日志全程零记录。定案方向：TSF 前激活旁路（键落在墨奇于该线程激活完成之前，不经任何输入法、无日志可留）——与用户 09:35 在 ZCode 的吞首字（守卫零记录、且该进程揣的是修复版 DLL）同族。待办：探针加激活态自检（每键前查 GetActiveLanguageProfile）+ 激活后随机延迟扰动复现竞态；真实复现靠 tsf-key-guard（常开）+ tsf-debug（trace 已开）抓现场。初步证据【已核】：①发生时段 tsf-key-guard.log 全程不存在 = 墨奇 DLL 的三个直通分支一次都没触发（分支必留痕），说明这些键**没到 filterKeyDown**，在 TSF 激活完成前就直进应用；②脏跑编辑框 a11y 读回 563 字样本含 "nihaoni 号/nihaonihaon" 混排（拟好/你好夹杂）；③stress.cpp 时序=ActivateLanguageProfile→Pump(40ms)→立即打字，切换后存在 IME 未就绪窗口。待查方向：a) 给 stress.cpp 加每周期提交文本校验（统计裸字母周期占比与时刻）；b) 测微软/搜狗同场景是否存在同窗口（对标"别家从不丢"）；c) 若窗口真实存在，评估 DLL 侧能否提前激活（onSetFocus 预热 profile）或后端预热缩短窗口。注意：与 bug#18（墨奇吃键→已改直通）不同类——#19 是键根本没进墨奇。
 
 20. 2026-11-05 用户新立（红色警报，MS Word 2016 另一台机器复现；记事本/WPS/其他输入法均无此问题）：快打 "1." 只出 "1"，句点凭空丢失；放慢先打 1 再打 . 则正常。正要写列表的场景。【2026-11-05 当日修复，已出 14:20 std 测试包待 Word 机验证】根因链：①数字与小数点直通（moqi_plain_number.lua）走"输入法代插"（commit_text 两次背靠背），而微软/谷歌对数字是键盘放行由应用原生插入——Word 2016 的自动编号处理窗口期会拒绝/无限期压住紧随数字提交之后的第二次 IME 代插（其过滤阶段提交 session=nullptr → 入异步队列 → ASYNCDONTCARE 会话在 Word 忙时被压住；记事本/WPS 宽容所以无恙）；②修复=MoqiClient.dll 侧：最近一次代插为单个数字时，紧跟的句点键（VK_OEM_PERIOD/VK_DECIMAL）在 filterKeyDown/onKeyDown 两阶段一致返回"不吃"，由应用原生插入半角点（微软同款语义）；③排障连环坑：DLL 侧键码是 Windows VK（句点=0xBE/小键盘点=0x6E）而非 rime keysym 0x2E——首版照抄 keysym 永不命中；filterKeyDown 放行后 onKeyDown 阶段 daemon 的 lastKeyDownRet_ 残留会把句点重新吃掉——需独立 pending 旗标两阶段一致。证据：tsf-key-guard.log vk=190 两条放行记录 + 记事本冒烟 快打1.→1. ✓ / 3.14→3.14 ✓ / 字母后句点仍全角。✓ 无回归。代码未提交：等 Word 机真机验证后随 v2.0.0 提交。详见 43-方案 同日记录。
+
+
+21. 2026-11-05 用户新立（另一台电脑，客户也反馈过同现象）：打开便笺后，点击便笺窗口再点击桌面，
+    语言栏里的"中英"图标就丢了——也许是点桌面能显示、也许是点便笺能显示，反正只有一个显示；
+    重启电脑问题依旧，"莫名其妙，就是不显示"，反复出现。用户要求"彻彻底底搞清楚，彻彻底底修好"。
+    【2026-11-05 根治，待真机复现验证】根因（代码级，可复现的确定性缺陷）：
+    语言栏按钮的图标原先由进程级 static 缓存（LangBarButton::iconCache_）统一持有，
+    而 Client::onDeactivate() 里调了 LangBarButton::clearIconCache() → DestroyIcon 把缓存里
+    所有 HICON 全销毁。同一进程里仍活在语言栏上的其它按钮持有的是同一批句柄，销毁后
+    GetIcon 走 CopyImage(已失效句柄) 返回 NULL —— 语言栏上就是空按钮/图标消失；
+    且 setIconFile 只在"路径变化"时才重新 LoadImage（路径没变 → 永不重载），
+    进程内一旦中毒不可恢复；而每次切走焦点都会再执行一遍 onDeactivate，所以"反复出问题"、
+    "重启也没用"（一进一出立刻重现）。多线程进程/多个应用各自的语言栏项由此出现
+    "有的窗口有、有的窗口没有，只有一个显示"。
+    修法（三处）：① 图标改为按钮自持（LangBarButton::ownedIcon_，LoadImage 自己一份、
+    按钮析构才 DestroyIcon），彻底删掉进程级 static 缓存与 clearIconCache；
+    ② setIconFile 在"当前无图标"时即使路径未变也重试加载，加载失败保留旧图标并写
+    tsf-key-guard.log（绝不把按钮留空）；③ GetIcon 无图标时记无条件日志并返回 E_FAIL，
+    供现场区分"图标没了"和"栏项没了"。另加固：语言栏注册（ITfLangBarItemMgr::AddItem）
+    返回码上抛并在 DLL 侧记日志，失败时先 RemoveItem 再 AddItem 自愈（同 GUID 陈旧项残留
+    会让新按钮永不显示）；daemon 侧探测图标目录改为"目录里真有 eng.ico+chi_half_capsoff.ico"
+    才算数（此前只要目录存在就发路径，空目录会让 LoadImage 全灭）。
+
+
+22. 2026-11-05 用户再报（红色警报复发，本机重装+重启后仍易现）：Word 2016 里正常速度打 "1."
+    只剩 "1"，句点丢。前两次修复（DLL 侧放行 / daemon 引擎侧判定句点）均真机无效。
+    【2026-11-05 第三次修复=真修好，待用户真机确认】做法=在本机装 Word 2016 真机复现：
+    Word COM 建文档 + keybd_event 真按键 + 切墨奇 TSF + 读回 doc.Range().Text。
+    修复前实测：句中快打 "1. 2. 3." 只剩 ". . "（数字全丢）、段首 "1." 空。
+    根因（结构性，前两次都没打中）：数字和句点都由输入法引擎提交，DLL 再经 TSF
+    ITfInsertAtSelection 开编辑会话代插（TF_ES_SYNC|TF_ES_READWRITE）。Word 在段首做
+    自动编号/自动格式时会把"输入法发起的编辑会话"静默丢弃，两次相邻代插（数字、句点）
+    尤其容易丢一次。微软/谷歌拼音根本不把数字交给输入法（键盘原生直插），故从不丢。
+    前两次失败原因：① DLL 侧标记要等异步插入落屏才置位，Word 压着不落→永不触发；
+    ② daemon 那次只放行了句点，数字仍是 IME 代插→Word 丢的是数字那次。
+    修法：daemon 新增 tryNativeDigitPassthrough()——无组字、无 Ctrl/Alt/Shift、
+    非 T9 类方案时，数字键 0-9 直接 returnValue=0 交应用原生插入；句点键仅在
+    "上一键是原生直通数字"时同样直通（使 "1." 全程不碰 IME），否则仍走 punctuator；
+    nativeDigitPassthroughPending_ 保证 filterKeyDown/onKeyDown 两阶段结论一致；
+    schemaUsesDigitInput() 按"方案 id 含 t9 或 speller/alphabet 含数字"判定并缓存、
+    方案切换重置。旧的 lastCommitSingleDigit_ 路径保留作兜底。
+    验收：F:\work\IME\word-repro\final_check.py，Word 18 格全 PASS，与微软拼音
+    同脚本同机逐格一致（段首 1. 4~150ms、句中 x 1.、3.14、x 1. 2. 3.、多行 1.⏎2.⏎3.）；
+    记事本冒烟 4/4；std 包 17:41 已出并静默装机复验。
+    踩坑：① Word 段首 "1."+空格=自动编号，编号不进正文（ListType=3），读回像"内容丢了"
+    ——判丢字必须在按空格前读；② 复现脚本用例间必须 ESC 清组字，否则假 FAIL；
+    ③ SetForegroundWindow 会被拒（用户动鼠标），脚本须重试容错；
+    ④ 32 位 Word 无需另测：32/64 位都走同一 MoqiDaemon，提交路径一致。
+
+
+23. 2026-11-05 晚（用户定向"通读活代码找缺陷"）：对当日全部改动逐行自查，发现并修复 3 个缺陷。
+    ①【严重】tryNativeDigitPassthrough 用滞后一拍的 keyComposing_（processKey 处理当前键前采样）：
+      空格刚上屏组字已清时它仍 true → 打完中文紧跟数字被误判组字中 → 数字走 IME 代插 →
+      bug#20 在"中文后起列表"场景复活。修复=直通判定与旧兜底块都改为现查 currentState()。
+      验证 smoke_cn_digit.py 6/6（你好/可以 + 快打 1.，5~80ms 全过）。
+    ②【泄漏】语言栏按钮表挪进 TextService（bug#21 修复）后成引用环：
+      TextService→按钮表→按钮(ComPtr<TextService>)→TextService，线程退出整图永不析构，
+      每死一线程漏一份。修复=libIME2 新增 clearLangBarButtons()（RemoveItem+清 vector），
+      Moqi onDeactivate 统一清两级表；不影响"切焦点不摘按钮"的修复。
+    ③【加固】nativeDigitPassthroughPending_ 滞留（filter 设了、onKeyDown 没来）会误放行
+      后续组字数字选择；修复=其它键进 filter 阶段即清。
+    另【bug#21 根因修正】问题机日志实证：同一秒 addButton 成对出现（每 Client 一套注册表，
+    同进程多 Client 重复 AddItem；windows-mode-icon 固定系统 GUID {2C77A81E} 在 msctf 里
+    互相顶掉；Client::resetTextSpeechState 每次断线重连 RemoveItem 全部按钮=消失触发点）。
+    真根因=注册表应进程级唯一。已修：注册表上移 TextService、Client 不再持有/摘除按钮。
+    早前"图标句柄 UAF"修复仍正确但非主因。
+    验证：构建零错零新警告；daemon 30/20/24、protocol 32+32 全绿；smoke 4/4+6/6；
+    每次激活 buttons=4 一批、4 按钮 GetIcon 全 hr=0；装机 18:42。
+    详见 46-交接-2026-11-05-代码通读自查.md。
