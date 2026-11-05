@@ -186,6 +186,12 @@ cd /z/dev/IME/MoqiIME/eval-workspace && ./suite-v2.sh     # 发版档全矩阵
   （提权脚本引用 Z:\ 路径会静默失败，实测），且 IO 慢。提权操作的源文件
   先拷到 F:\work\ 再 RunAs。持久性测评素材仍归 eval-workspace。
   （F:\work\IME\ 下已有 ai-key-mask 工具目录与参考资料，同类临时物按主题建子目录。）
+- **jsoncpp 配置文件取值纪律（2026-11-06 定）**：读用户可手改的 JSON
+  （cloud_clipboard/appearance/local_behavior/scheme_set/ai_config/
+  network_egress/MoqiLauncher 等）一律走 RimeCore.h 的
+  `jsonBoolOf/jsonStringOf/jsonIntOf/jsonMemberOf`——裸 get/operator[]
+  在非对象容器上抛 LogicError，裸 asBool/asInt 对错型值也抛
+  （实证矩阵见 51-交接§八）；协议侧已有 catch 装甲不在此列。
 - 更多环境坑（热用户目录、DLOG、heredoc 转义、共享盘 filemode）见
   03-交接文档第七节，动环境前先读。
 
