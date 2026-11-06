@@ -14,3 +14,5 @@
 # 构建日志（临时产物，不入库）
 *.log
 *.obj
+Thumbs.db
+pgo-backup/

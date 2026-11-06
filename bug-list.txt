@@ -117,3 +117,18 @@
     （moqi-im-windows fca346f + 打包 gram 固定 7d566d8）。
     遗留：UWP 内 CreateProcess err=15623 起 daemon 失败未修（冷开机先点便笺
     且 daemon 未就绪时仍会 buttons=0）。详见 53-交接-2026-11-06-便笺图标指示器不拉取根治.md。
+
+25. 2026-11-06 傍晚用户报（#21/#24 家族，范围扩大到普通 Win32 进程）：
+    一下午在 wezterm/TotalCommander/记事本（均非 AppContainer）反复出现中英
+    图标消失，只能切微软再切回墨奇恢复；部署操作（焦点路过 daemon 结果弹窗
+    这类无 TSF 前台窗口）后尤其明显。#24 的修复把推送门控在
+    isAppContainerProcess() 上，其设计假设"普通 Win32 进程每次焦点切换指示器
+    都会自己拉取"被本例证伪——Win32 指示器同样会停在"不再拉取"状态。
+    【当日修复+自动化验证】pushLangBarUpdateForIndicator 删除 AppContainer
+    门控（孤儿判定函数一并删除）：所有进程在激活/焦点切换/按钮增删时对已注册
+    按钮 update(TF_LBI_ICON|TF_LBI_STATUS)；每键回包路径维持 buttonsChanged
+    门控不变（54 的开销修复保留）。推送日志降 trace 档并带 exe= 归因。
+    验证（18:32 实机，双 notepad 焦点往返×8+管道触发部署）：9 条
+    [langbar] push update exe=notepad.exe reason=onSetThreadFocus/updateLanguageButtons，
+    推送后 15ms 指示器 GetInfo×4 跟随——修复前这些推送被门控全部吞掉。
+    详见 56-交接-2026-11-06。
