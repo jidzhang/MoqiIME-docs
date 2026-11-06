@@ -101,3 +101,19 @@
     验证：构建零错零新警告；daemon 30/20/24、protocol 32+32 全绿；smoke 4/4+6/6；
     每次激活 buttons=4 一批、4 按钮 GetIcon 全 hr=0；装机 18:42。
     详见 46-交接-2026-11-05-代码通读自查.md。
+
+24. 2026-11-06 用户再报（便笺图标问题 #21 的真根因，前两轮修复都没打中）：
+    焦点在便笺，手动切一次微软/墨奇后"中"能显示；点其他软件出现、点回便笺必消失。
+    【2026-11-06 当日根治，用户真机确认"可以了"】取证：便笺 AppContainer 回退日志
+    （包 LocalState\MoqiIM\tsf-key-guard.log）显示按钮注册/图标全部正常（buttons=4、
+    GetIcon hr=0），但焦点回到便笺线程后 GetInfo 零调用；对照组 Win32 应用（wezterm）
+    焦点事件后 GetInfo×4 同毫秒跟随——输入指示器对 AppContainer 进程（便笺等 UWP）
+    的焦点线程根本不主动拉取语言栏项，"手动切换输入法能显示"= 强制刷新路径有效。
+    修复=MoqiTextService 判定本进程是否 AppContainer（TokenIsAppContainer），是则
+    在 updateLanguageButtons（主时机）/onActivate/onSetThreadFocus 三点对已注册按钮
+    update(TF_LBI_ICON|TF_LBI_STATUS) 逼指示器重拉；普通进程不受影响。
+    52 版的 keep 不摘项/cached restore/selfheal 实验代码整体丢弃（备份
+    F:\work\IME\langbar-52-backup\），基线回到 6457b3c 叠加最小修复
+    （moqi-im-windows fca346f + 打包 gram 固定 7d566d8）。
+    遗留：UWP 内 CreateProcess err=15623 起 daemon 失败未修（冷开机先点便笺
+    且 daemon 未就绪时仍会 buttons=0）。详见 53-交接-2026-11-06-便笺图标指示器不拉取根治.md。
