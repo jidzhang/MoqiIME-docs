@@ -89,6 +89,14 @@ jidzhang/libIME2 作 origin，原地址保留为 upstream（用于跟上游同�
     zhihu120+words234 单臂 gram-on（约 3 分钟）；③ 静默装+首键冒烟（约 2 分钟）。
     对比对象＝上一发版存的基线快照（发版时把轻门输出存 `baseline-vX.Y.Z`，
     下次 diff，退步即挡）。40 格全矩阵降级为"重大改动/出现疑点/大版本"才跑。
+14. **脚本与工具零机器路径（2026-11-07 用户定，可参与性前提）**：活脚本/
+    工具/文档不得出现机器专属绝对路径——VS 定位走 `librime\vcvars-detect.bat`
+    （vswhere 探测任意版本），第三方工具（protoc 等）走环境变量+用户缓存+
+    FetchContent 兜底，eval 工具由 exe 所在位置或 `$BASH_SOURCE`/`__file__`
+    推导根目录（google-input-tools 等素材仓=项目根的兄弟仓）。例外：安装
+    目录约定（`C:\Program Files (x86)\MoqiIM`）与 vendored 第三方依赖树不
+    改；历史交接文档不回写。遗留：eval/cmd/probe-{autopen,autopen2,
+    calibrate,jianpin} 四个十月的调试遗物仍含 Z: 死路径（待拍板删除）。
 
 ## 路线（按优先级）
 
@@ -164,7 +172,7 @@ moqi-im-windows\scripts\_all_in_package.ps1
 
 ```bash
 # 测评（迭代档约 5 分钟；口径详见 eval-workspace/SUITE.md）
-cd /z/dev/IME/MoqiIME/eval-workspace && ./suite-v2.sh     # 发版档全矩阵
+cd <项目根>/eval-workspace && ./suite-v2.sh            # 发版档全矩阵(脚本已相对化)
 ./run-cell.sh <维度> <off|on> <native|ime> <full|jianpin>  # 单格
 ./dump-all.exe <pinyin>...    # 显微镜：候选全页
 ./probe-typo.exe 2000 2000    # 容错维度
