@@ -191,12 +191,11 @@ cd <项目根>/eval-workspace && ./suite-v2.sh            # 发版档全矩阵(�
 - 改 librime 后：`librime/rebuild-librime2.bat` 重编 rime.dll，
   拷到 `moqi-ime/input_methods/rime/rime.dll` 与 `eval-workspace/rime.dll`。
 - MSVC 编译必须走 .bat（Git Bash 误解析参数）；GitHub 走代理 127.0.0.1:7890。
-- **测试临时产物（探针 exe/提权脚本/中转文件/临时 bat）放 `F:\work\`，不放
-  Z:\、C:\Users、D:\**（2026-10-23 定 D:\，2026-10-31 用户改定 F:\work\：D 盘是
-  VMware 所在硬盘、空间小）：Z:\ 是 VMware 共享盘——**提权后的进程看不到它**
-  （提权脚本引用 Z:\ 路径会静默失败，实测），且 IO 慢。提权操作的源文件
-  先拷到 F:\work\ 再 RunAs。持久性测评素材仍归 eval-workspace。
-  （F:\work\IME\ 下已有 ai-key-mask 工具目录与参考资料，同类临时物按主题建子目录。）
+- **测试工具与素材与项目同住（2026-11-08 用户改定，F:\work 作废——那是
+  另一台机器的习惯）**：黑盒测试工具/结果归 `blackbox\`（gitignore，
+  与 eval-workspace 同级并列），白盒与持久测评素材归 eval-workspace，
+  性能插桩档案归 `blackbox\perf\`。不再使用项目外的 F:\work；Z:\ 共享盘
+  禁用照旧（提权进程看不到它，实测），提权操作的源文件先拷项目内再 RunAs。
 - **jsoncpp 配置文件取值纪律（2026-11-06 定）**：读用户可手改的 JSON
   （cloud_clipboard/appearance/local_behavior/scheme_set/ai_config/
   network_egress/MoqiLauncher 等）一律走 RimeCore.h 的
