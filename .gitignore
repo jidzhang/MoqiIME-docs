@@ -16,3 +16,4 @@
 *.obj
 Thumbs.db
 pgo-backup/
+blackbox/
