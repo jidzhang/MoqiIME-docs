@@ -17,3 +17,6 @@
 Thumbs.db
 pgo-backup/
 blackbox/
+
+# 上一 agent 会话工作日志（HANDOFF §6 引用资产，本地保留不入库）
+.workbuddy-ai/
