@@ -174,8 +174,19 @@
     整体回滚不入库（diff 存档 C:\temp\MoqiGateA-20261111\guard-attempt.diff），
     B/C/D 全搁置。详见调查报告 §五与 73-交接 §7。
 
-28. 2026-11-13 实验观察（语境提交错字 + 两栈差异，待诊断）：
+28. 2026-11-13 实验观察（语境提交错字 + 两栈差异，已诊断闭合）：
     产品 daemon 对 kuainanide（快拿你的）top-1 上屏「快那你的」（拿→那），
     致 A3 探针 P4（偷窥/头盔镜像对）双臂语境基线不成立而跳过；
-    白盒 Go 栈同语境上屏正确——两栈在语境提交上存在差异，另案诊断。
-    状态：待诊断（产品 accuracy + 白盒/产品一致性两条线）。
+    白盒 Go 栈同语境上屏正确。
+    【2026-11-13 诊断闭合，详见 eval-workspace/gate-a/bug28-investigation.md】：
+    非配置 bug/非两栈移植差/非 daemon 重排/非 x86-x64 差。native 显微镜三跑
+    bisect（dump-dir 直连 x64 引擎，产品 data+配置+真实 userdb 副本）：
+    A(penalty-4+真实db)=快那你的（逐位复现产品）；B(-12+真实db)=快拿你的；
+    C(-4+全新db)=快拿你的。⇒ penalty-4 是必要条件、真实 userdb 码级提权是助推。
+    penalty-4 是 zh-moqi-lite.gram 的校准全局最优（SHA 7b441e6d…，Go 出厂预设
+    与产品 LocalBehaviorPatch 一致，483 句扫参峰），降-12 修此例但全局丢分。
+    userdb 助推=bug#27 同机理（码级全局 scoring 无语境）。「两栈差异」真相=
+    白盒 runner 手写 PATCH 漏写 penalty→默认-12 掩盖缺陷。结论：与#27/d3→70%
+    同一堵墙（语境条件化消歧），建议归档为已知局限而非独立可修 bug，学习算法
+    不投入。顺手项（已做）：白盒 runner PATCH 补 penalty-4 与产品对齐。
+    状态：用户拍板归档已知局限（与#27 共享根因，随学习止损冻结，非独立可修 bug）。
